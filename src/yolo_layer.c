@@ -122,6 +122,7 @@ void resize_yolo_layer(layer *l, int w, int h)
 box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw, int lh, int w, int h, int stride)
 {
     box b;
+    float diameter, theta;
     // ln - natural logarithm (base = e)
     // x` = t.x * lw - i;   // x = ln(x`/(1-x`))   // x - output of previous conv-layer
     // y` = t.y * lh - i;   // y = ln(y`/(1-y`))   // y - output of previous conv-layer
@@ -129,8 +130,11 @@ box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw
                             // h = ln(t.h * net.h / anchors_h); // h - output of previous conv-layer
     b.x = (i + x[index + 0*stride]) / lw;
     b.y = (j + x[index + 1*stride]) / lh;
-    b.w = exp(x[index + 2*stride]) * biases[2*n]   / w;
-    b.h = exp(x[index + 3*stride]) * biases[2*n+1] / h;
+    
+    diameter = exp(x[index + 2*stride]);
+    theta = exp(x[index + 3*stride]);
+    b.w = diameter * sin(theta) * biases[2*n]   / w;
+    b.h = diameter * cos(theta) * biases[2*n+1] / h;
     return b;
 }
 
