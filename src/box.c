@@ -451,8 +451,8 @@ dxrep dx_box_iou(box pred, box truth, IOU_LOSS iou_loss) {
 
     ddx.dt = p_dx;      //We follow the original code released from GDarknet. So in yolo_layer.c, dt, db, dl, dr are already dx, dy, dw, dh.
     ddx.db = p_dy;
-    ddx.dl = p_dw;
-    ddx.dr = p_dh;
+    ddx.dl = p_dw * cos(pred.h);
+    ddx.dr = p_dh * (pred.w * -sin(pred.h));
 
     // UNUSED
     //// ground truth
