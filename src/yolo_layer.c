@@ -140,8 +140,8 @@ box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw
     b.h = diameter * cos(theta);
     
     
-    fprintf(stderr, " diameter: %f, theta = %f, b.w = %f, b.h = %f, x[index + 2*stride] = %f , x[index + 3*stride] = %f, biases[2*n] = %f, biases[2*n+1] = %f\n",
-        diameter, theta, b.w, b.h, x[index + 2*stride], x[index + 3*stride], biases[2*n], biases[2*n+1]);
+    //fprintf(stderr, " diameter: %f, theta = %f, b.w = %f, b.h = %f, x[index + 2*stride] = %f , x[index + 3*stride] = %f, biases[2*n] = %f, biases[2*n+1] = %f\n",
+    //    diameter, theta, b.w, b.h, x[index + 2*stride], x[index + 3*stride], biases[2*n], biases[2*n+1]);
     return b;
 }
 
