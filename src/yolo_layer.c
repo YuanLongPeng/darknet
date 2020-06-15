@@ -135,6 +135,10 @@ box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw
     theta = exp(x[index + 3*stride]) * biases[2*n+1] / h;
     b.w = diameter * sin(theta);
     b.h = diameter * cos(theta);
+    
+    
+    fprintf(stderr, " diameter: %f, theta = %f, b.w = %f, b.h = %f \n",
+        diameter, theta, b.w, b.h);
     return b;
 }
 
