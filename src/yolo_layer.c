@@ -217,8 +217,8 @@ ious delta_yolo_box(box truth, float *x, float *biases, int n, int index, int i,
         float dh = all_ious.dx_iou.dr;
 
         // predict exponential, apply gradient of e^delta_t ONLY for w,h
-        dw *= exp(x[index + 2 * stride]);
-        dh *= exp(x[index + 3 * stride]);
+        dw = dw * exp(x[index + 2 * stride]) * sin(exp(x[index + 3 * stride]));
+        dh = dh * exp(x[index + 3 * stride]) * exp(x[index + 2 * stride]) * (-sin(exp(x[index + 3 * stride])));
 
         // normalize iou weight
         dx *= iou_normalizer;
