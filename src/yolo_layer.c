@@ -131,16 +131,17 @@ box get_yolo_box(float *x, float *biases, int n, int index, int i, int j, int lw
     b.x = (i + x[index + 0*stride]) / lw;
     b.y = (j + x[index + 1*stride]) / lh;
     
-    diameter = exp(x[index + 2*stride]) * biases[2*n]   / w;
-    theta = exp(x[index + 3*stride]) * biases[2*n+1] / h;
+    diameter = exp(x[index + 2*stride]);
+    theta = exp(x[index + 3*stride]);
     if(theta > 1.57) {
         theta = 1.57;
     }
-    b.w = diameter * sin(theta);
-    b.h = diameter * cos(theta);
+    b.w = (diameter * biases[2*n]) * cos(theta * biases[2*n+1]) / w;
+    b.h = (diameter * biases[2*n]) * sin(theta * biases[2*n+1]) / h;
     
     
-    //fprintf(stderr, " diameter: %f, theta = %f, b.w = %f, b.h = %f, x[index + 2*stride] = %f , x[index + 3*stride] = %f, biases[2*n] = %f, biases[2*n+1] = %f\n",
+    //fprintf(stderr, " diameter: %f, theta = %f, b.w = %f, b.h = %f, x[index + 2*stride] = %f , x[index + 3*stride] = %f, biases
+    //biases[2*n] = %f, biases[2*n+1] = %f\n",
     //    diameter, theta, b.w, b.h, x[index + 2*stride], x[index + 3*stride], biases[2*n], biases[2*n+1]);
     return b;
 }
@@ -186,8 +187,10 @@ ious delta_yolo_box(box truth, float *x, float *biases, int n, int index, int i,
     {
         float tx = (truth.x*lw - i);
         float ty = (truth.y*lh - j);
-        float tw = log(truth.w*w / biases[2 * n]);
-        float th = log(truth.h*h / biases[2 * n + 1]);
+        float theta = atan((truth.h/truth.w) * (h / w)) / biases[2 * n + 1];
+        float diameter = truth.w*w / (biases[2 * n] * cos(theta * biases[2 * n + 1]));
+        float tw = log(diameter); //log(truth.w*w / biases[2 * n]);
+        float th = log(theta);//log(truth.h*h / biases[2 * n + 1]);
 
         //printf(" tx = %f, ty = %f, tw = %f, th = %f \n", tx, ty, tw, th);
         //printf(" x = %f, y = %f, w = %f, h = %f \n", x[index + 0 * stride], x[index + 1 * stride], x[index + 2 * stride], x[index + 3 * stride]);
@@ -221,8 +224,8 @@ ious delta_yolo_box(box truth, float *x, float *biases, int n, int index, int i,
         if(theta > 1.57) {
             theta = 1.57;
         }
-        dw = dw * exp(x[index + 2 * stride]) * sin(theta);
-        dh = dh * exp(x[index + 3 * stride]) * exp(x[index + 2 * stride]) * (-sin(theta));
+        dw = dw * exp(x[index + 2 * stride]) * cos(theta);
+        dh = dh * exp(x[index + 3 * stride]) * exp(x[index + 2 * stride]) * (cos(theta));
 
         // normalize iou weight
         dx *= iou_normalizer;
@@ -499,8 +502,8 @@ void forward_yolo_layer(const layer l, network_state state)
             truth_shift.x = truth_shift.y = 0;
             for (n = 0; n < l.total; ++n) {
                 box pred = { 0 };
-                pred.w = l.biases[2 * n] / state.net.w;
-                pred.h = l.biases[2 * n + 1] / state.net.h;
+                pred.w = l.biases[2 * n] * cos(l.biases[2 * n + 1]) / state.net.w;
+                pred.h = l.biases[2 * n] * sin(l.biases[2 * n + 1]) / state.net.h;
                 float iou = box_iou(pred, truth_shift);
                 if (iou > best_iou) {
                     best_iou = iou;
@@ -552,8 +555,8 @@ void forward_yolo_layer(const layer l, network_state state)
                 int mask_n = int_index(l.mask, n, l.n);
                 if (mask_n >= 0 && n != best_n && l.iou_thresh < 1.0f) {
                     box pred = { 0 };
-                    pred.w = l.biases[2 * n] / state.net.w;
-                    pred.h = l.biases[2 * n + 1] / state.net.h;
+                    pred.w = l.biases[2 * n] * cos(l.biases[2 * n + 1]) / state.net.w;
+                    pred.h = l.biases[2 * n] * sin(l.biases[2 * n + 1]) / state.net.h;
                     float iou = box_iou_kind(pred, truth_shift, l.iou_thresh_kind); // IOU, GIOU, MSE, DIOU, CIOU
                     // iou, n
 
